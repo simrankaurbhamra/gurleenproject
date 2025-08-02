@@ -198,105 +198,29 @@ def tab6_content():
 
 # ============== TAB 7: ML Predictor ==================
 def tab7_content():
-    st.subheader("🎯 Career & College & Job Role Predictor")
+   
+    import pickle
 
-    with st.form("predict_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            stream = st.selectbox("Stream in 12th", df["Stream_in_12th"].unique())
-            entrance = st.selectbox("Entrance Exam", df["Entrance_Exam"].unique())
-            subject = st.selectbox("Subject Strength", df["Subject_Strength"].unique())
-            aptitude = st.slider("Aptitude IQ Score", 40, 100, 70)
-        with col2:
-            perc = st.slider("12th Percentage", 40, 100, 75)
-            domain = st.selectbox("Career Domain", df["Interest_Domain"].unique())
-            scholarship = st.selectbox("Scholarship Eligibility", df["Scholarship_Eligibility"].unique())
-            abroad = st.selectbox("Study Abroad Plan", df["Study_Abroad_Plan"].unique())
+    # Load models
+    with open("models/Target_College.pkl", "rb") as f:
+        model_college = pickle.load(f)
 
-        submit = st.form_submit_button("Predict")
+    with open("models/Career_Interest.pkl", "rb") as f:
+        model_career = pickle.load(f)
 
-    if submit:
-        label_encoders = {}
-        df_encoded = df.copy()
+    with open("models/Backup_Course.pkl", "rb") as f:
+        model_backup = pickle.load(f)
 
-        # Check & fill default values for any missing expected columns
-        if 'Soft_Skills' not in df_encoded.columns:
-            df_encoded['Soft_Skills'] = 7
-        if 'Thinking_Ability' not in df_encoded.columns:
-            df_encoded['Thinking_Ability'] = 6
+    with open("models/Counselor_Recommendation.pkl", "rb") as f:
+        model_counsel = pickle.load(f)
 
-        # Encode all required columns
-        categorical_cols = ['Stream_in_12th', 'Entrance_Exam', 'Subject_Strength',
-                            'Scholarship_Eligibility', 'Study_Abroad_Plan', 'Target_College',
-                            'Career_Interest', 'Backup_Course', 'Counselor_Recommendation',
-                            'Interest_Domain', 'Target_Job_Role']
+    with open("models/Target_Job_Role.pkl", "rb") as f:
+        model_jobrole = pickle.load(f)
 
-        for col in categorical_cols:
-            le = LabelEncoder()
-            df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))
-            label_encoders[col] = le
+    with open("models/label_encoders.pkl", "rb") as f:
+        label_encoders = pickle.load(f)
 
-        # Features for prediction
-        features = ['Stream_in_12th', 'Entrance_Exam', 'Subject_Strength', '12th_Percentage',
-                    'Aptitude_Test_Score', 'Scholarship_Eligibility', 'Study_Abroad_Plan',
-                    'Interest_Domain', 'Soft_Skills', 'Thinking_Ability']
 
-        # Ensure dataset has all features
-        for col in ['Soft_Skills', 'Thinking_Ability']:
-            if col not in df_encoded.columns:
-                df_encoded[col] = 7 if col == 'Soft_Skills' else 6
-
-        X = df_encoded[features]
-
-        # Targets
-        y_college = df_encoded["Target_College"]
-        y_career = df_encoded["Career_Interest"]
-        y_backup = df_encoded["Backup_Course"]
-        y_counsel = df_encoded["Counselor_Recommendation"]
-        y_jobrole = df_encoded["Target_Job_Role"]
-
-        # Train models
-        model_college = DecisionTreeClassifier().fit(X, y_college)
-        model_career = DecisionTreeClassifier().fit(X, y_career)
-        model_backup = DecisionTreeClassifier().fit(X, y_backup)
-        model_counsel = DecisionTreeClassifier().fit(X, y_counsel)
-        model_jobrole = DecisionTreeClassifier().fit(X, y_jobrole)
-
-        # Prepare user input
-        input_data = pd.DataFrame([{
-            'Stream_in_12th': label_encoders['Stream_in_12th'].transform([stream])[0],
-            'Entrance_Exam': label_encoders['Entrance_Exam'].transform([entrance])[0],
-            'Subject_Strength': label_encoders['Subject_Strength'].transform([subject])[0],
-            '12th_Percentage': perc,
-            'Aptitude_Test_Score': aptitude,
-            'Scholarship_Eligibility': label_encoders['Scholarship_Eligibility'].transform([scholarship])[0],
-            'Study_Abroad_Plan': label_encoders['Study_Abroad_Plan'].transform([abroad])[0],
-            'Interest_Domain': label_encoders['Interest_Domain'].transform([domain])[0],
-            'Soft_Skills': 7,
-            'Thinking_Ability': 6
-        }])
-
-        # Predict
-        pred_college = model_college.predict(input_data)[0]
-        pred_career = model_career.predict(input_data)[0]
-        pred_backup = model_backup.predict(input_data)[0]
-        pred_counsel = model_counsel.predict(input_data)[0]
-        pred_jobrole = model_jobrole.predict(input_data)[0]
-
-        # Decode predictions
-        predicted_college = label_encoders['Target_College'].inverse_transform([pred_college])[0]
-        predicted_career = label_encoders['Career_Interest'].inverse_transform([pred_career])[0]
-        predicted_backup = label_encoders['Backup_Course'].inverse_transform([pred_backup])[0]
-        predicted_counsel = label_encoders['Counselor_Recommendation'].inverse_transform([pred_counsel])[0]
-        predicted_jobrole = label_encoders['Target_Job_Role'].inverse_transform([pred_jobrole])[0]
-
-        # Display
-        st.balloons()
-        st.success(f"🎓 **Recommended College:** {predicted_college}")
-        st.success(f"💼 **Suggested Career:** {predicted_career}")
-        st.info(f"🔁 **Backup Course Option:** {predicted_backup}")
-        st.warning(f"👩‍🏫 **Counselor Recommendation:** {predicted_counsel}")
-        st.success(f"🧭 **Predicted Target Job Role:** {predicted_jobrole}")
 
 # ============== TAB 8: Donut Charts ==================
 def tab8_content():
